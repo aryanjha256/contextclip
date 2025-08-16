@@ -414,24 +414,38 @@ class _SettingsTab extends ConsumerWidget {
     return ListView(
       padding: const EdgeInsets.all(12),
       children: [
-        const Text(
-          'Clipboard Listener',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        Row(
+          children: [
+            const Icon(HugeIcons.strokeRoundedClipboard),
+            const SizedBox(width: 8),
+            const Text('Clipboard'),
+          ],
         ),
         const SizedBox(height: 8),
-        _ListenerTile(),
-        const SizedBox(height: 16),
-        const Text('History', style: TextStyle(fontWeight: FontWeight.bold)),
-        const SizedBox(height: 8),
-        limitAsync.when(
-          data: (limit) => _HistoryLimitTile(current: limit),
-          loading: () => const ListTile(title: Text('Loading...')),
-          error: (_, __) => const ListTile(title: Text('Error')),
+        Container(
+          decoration: BoxDecoration(
+            color: ColorScheme.fromSwatch().secondary.withOpacity(0.05),
+            borderRadius: const BorderRadius.all(Radius.circular(24)),
+          ),
+          child: Column(
+            children: [
+              _ListenerTile(),
+              Divider(height: 0),
+              limitAsync.when(
+                data: (limit) => _HistoryLimitTile(current: limit),
+                loading: () => const ListTile(title: Text('Loading...')),
+                error: (_, __) => const ListTile(title: Text('Error')),
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: 16),
-        const Text(
-          'Danger Zone',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        Row(
+          children: [
+            const Icon(HugeIcons.strokeRoundedDanger),
+            const SizedBox(width: 8),
+            const Text('Danger Zone'),
+          ],
         ),
         const SizedBox(height: 8),
         _DangerZone(),
@@ -449,8 +463,12 @@ class _ListenerTile extends ConsumerWidget {
       builder: (context, snapshot) {
         final enabled = snapshot.data ?? true;
         return SwitchListTile(
-          title: const Text('Background clipboard listener'),
-          subtitle: const Text('Automatically capture new copied text'),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 12,
+          ),
+          title: const Text('Clipboard Capture'),
+          subtitle: const Text('Automatically capture changes'),
           value: enabled,
           onChanged: (v) async {
             await ref.read(listenerToggleProvider(v).future);
@@ -489,15 +507,29 @@ class _HistoryLimitTileState extends ConsumerState<_HistoryLimitTile> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        ListTile(
-          title: const Text('History size (non-favorites)'),
-          subtitle: Text(_value.toInt().toString()),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: DefaultTextStyle(
+            style: TextStyle(
+              fontSize: 16,
+              // fontWeight: FontWeight.bold,
+              color: ColorScheme.fromSwatch().onSurface,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('History size (non-favorites)'),
+                Text(_value.toInt().toString()),
+              ],
+            ),
+          ),
         ),
         Slider(
           min: 20,
           max: 1000,
           divisions: 49,
           value: _value,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           label: _value.toInt().toString(),
           onChanged: (v) => setState(() => _value = v),
           onChangeEnd: (v) async {
@@ -519,49 +551,74 @@ class _DangerZone extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final clearNonFavs = ref.read(clearNonFavsCommandProvider);
     final clearAll = ref.read(clearAllCommandProvider);
-    return Column(
-      children: [
-        FilledButton.tonalIcon(
-          onPressed: () async {
-            final ok = await _confirm(
-              context,
-              'Delete all non-favorite items?',
-            );
-            if (ok) {
-              await clearNonFavs();
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Cleared non-favorites')),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.red.withOpacity(0.05),
+        borderRadius: const BorderRadius.all(Radius.circular(24)),
+      ),
+      child: Column(
+        children: [
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: FilledButton.tonalIcon(
+              style: FilledButton.styleFrom(
+                minimumSize: const Size(double.infinity, 48),
+                backgroundColor: Theme.of(
+                  context,
+                ).colorScheme.primary.withOpacity(0.2),
+              ),
+              onPressed: () async {
+                final ok = await _confirm(
+                  context,
+                  'Delete all non-favorite items?',
                 );
-              }
-            }
-          },
-          icon: const Icon(Icons.cleaning_services),
-          label: const Text('Clear non-favorites'),
-        ),
-        const SizedBox(height: 8),
-        FilledButton.icon(
-          style: FilledButton.styleFrom(
-            backgroundColor: Theme.of(context).colorScheme.error,
+                if (ok) {
+                  await clearNonFavs();
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Cleared non-favorites')),
+                    );
+                  }
+                }
+              },
+              icon: const Icon(HugeIcons.strokeRoundedClean),
+              label: const Text('Clear non-favorites'),
+            ),
           ),
-          onPressed: () async {
-            final ok = await _confirm(
-              context,
-              'Delete ALL items (including favorites)?',
-            );
-            if (ok) {
-              await clearAll();
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('All items cleared')),
+          const SizedBox(height: 8),
+          Divider(height: 0),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: FilledButton.icon(
+              style: FilledButton.styleFrom(
+                minimumSize: const Size(double.infinity, 48),
+                backgroundColor: Theme.of(
+                  context,
+                ).colorScheme.error.withOpacity(0.8),
+              ),
+              onPressed: () async {
+                final ok = await _confirm(
+                  context,
+                  'Delete ALL items (including favorites)?',
                 );
-              }
-            }
-          },
-          icon: const Icon(Icons.delete_forever),
-          label: const Text('Clear ALL'),
-        ),
-      ],
+                if (ok) {
+                  await clearAll();
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('All items cleared')),
+                    );
+                  }
+                }
+              },
+              icon: const Icon(HugeIcons.strokeRoundedDeleteThrow),
+              label: const Text('Clear ALL'),
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
+      ),
     );
   }
 
