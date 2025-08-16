@@ -35,6 +35,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
     return Scaffold(
       appBar: AppBar(
+        centerTitle: true,
         title: const Text('ContextClip'),
         bottom: TabBar(
           controller: _tab,
@@ -74,7 +75,8 @@ class _QuickCopyFab extends ConsumerWidget {
           ).showSnackBar(const SnackBar(content: Text('Copied latest item')));
         }
       },
-      icon: const Icon(Icons.copy_all),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
+      icon: const Icon(HugeIcons.strokeRoundedCopy02),
       label: const Text('Copy latest'),
     );
   }
