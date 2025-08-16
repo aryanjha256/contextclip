@@ -144,14 +144,28 @@ class _HistoryTab extends ConsumerWidget {
 
     return Column(
       children: [
-        _FilterBar(),
-        const Divider(height: 0),
+        _FilterBar(showFavoritesSwitch: false),
         Expanded(
-          child: Consumer(
-            builder: (context, ref, _) {
-              final list = ref.watch(filteredClipsProvider);
-              return _ClipList(list: list);
-            },
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  ColorScheme.fromSwatch().primary.withOpacity(0.05),
+                  ColorScheme.fromSwatch().primary.withOpacity(0.1),
+                ],
+              ),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(24),
+              ),
+            ),
+            child: Consumer(
+              builder: (context, ref, _) {
+                final list = ref.watch(filteredClipsProvider);
+                return _ClipList(list: list);
+              },
+            ),
           ),
         ),
       ],
@@ -169,13 +183,27 @@ class _FavoritesTab extends ConsumerWidget {
     return Column(
       children: [
         _FilterBar(showFavoritesSwitch: false),
-        const Divider(height: 0),
         Expanded(
-          child: Consumer(
-            builder: (context, ref, _) {
-              final list = ref.watch(filteredClipsProvider);
-              return _ClipList(list: list);
-            },
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  ColorScheme.fromSwatch().primary.withOpacity(0.05),
+                  ColorScheme.fromSwatch().primary.withOpacity(0.1),
+                ],
+              ),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(24),
+              ),
+            ),
+            child: Consumer(
+              builder: (context, ref, _) {
+                final list = ref.watch(filteredClipsProvider);
+                return _ClipList(list: list);
+              },
+            ),
           ),
         ),
       ],
@@ -236,7 +264,7 @@ class _FilterBar extends ConsumerWidget {
                 child: TextField(
                   controller: controller,
                   decoration: InputDecoration(
-                    prefixIcon: const Icon(Icons.search),
+                    prefixIcon: const Icon(HugeIcons.strokeRoundedSearch01),
                     hintText: 'Search...',
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
