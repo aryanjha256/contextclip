@@ -136,9 +136,8 @@ class _ClipList extends StatelessWidget {
     if (list.isEmpty) {
       return const Center(child: Text('No items yet. Copy something!'));
     }
-    return ListView.separated(
+    return ListView.builder(
       itemCount: list.length,
-      separatorBuilder: (_, __) => const Divider(height: 0),
       itemBuilder: (context, i) => ClipTile(item: list[i]),
     );
   }
