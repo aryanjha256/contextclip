@@ -23,7 +23,7 @@ class ContextClipApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'ContextClip',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.amber),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
         useMaterial3: true,
         fontFamily: 'Roboto',
       ),

@@ -35,8 +35,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
     return Scaffold(
       appBar: AppBar(
-        centerTitle: true,
-        title: const Text('ContextClip'),
+        toolbarHeight: 12,
         bottom: TabBar(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           controller: _tab,
@@ -53,7 +52,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           indicatorColor: Colors.transparent,
           indicatorAnimation: TabIndicatorAnimation.elastic,
           indicator: BoxDecoration(
-            color: ColorScheme.fromSwatch().onSurface.withOpacity(0.1),
+            color: ColorScheme.fromSwatch().primary.withOpacity(0.1),
             shape: BoxShape.rectangle,
             borderRadius: BorderRadius.circular(32),
             boxShadow: [
