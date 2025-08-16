@@ -1,0 +1,470 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../models/clip_item.dart';
+import '../../providers.dart';
+import '../widgets/clip_tile.dart';
+
+class HomeScreen extends ConsumerStatefulWidget {
+  const HomeScreen({super.key});
+
+  @override
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen>
+    with TickerProviderStateMixin {
+  late final TabController _tab;
+
+  @override
+  void initState() {
+    super.initState();
+    _tab = TabController(length: 3, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tab.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    ref.watch(appBootProvider); // ensures listener setup
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('ContextClip'),
+        bottom: TabBar(
+          controller: _tab,
+          tabs: const [
+            Tab(icon: Icon(Icons.history), text: 'History'),
+            Tab(icon: Icon(Icons.star), text: 'Favorites'),
+            Tab(icon: Icon(Icons.settings), text: 'Settings'),
+          ],
+        ),
+      ),
+      body: TabBarView(
+        controller: _tab,
+        children: const [_HistoryTab(), _FavoritesTab(), _SettingsTab()],
+      ),
+      floatingActionButton: _QuickCopyFab(),
+    );
+  }
+}
+
+class _QuickCopyFab extends ConsumerWidget {
+  const _QuickCopyFab();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final items = ref
+        .watch(clipsStreamProvider)
+        .maybeWhen(data: (d) => d, orElse: () => const []);
+    if (items.isEmpty) return const SizedBox.shrink();
+
+    return FloatingActionButton.extended(
+      onPressed: () async {
+        final cmd = ref.read(copyCommandProvider);
+        await cmd(items.first.content);
+        if (context.mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Copied latest item')));
+        }
+      },
+      icon: const Icon(Icons.copy_all),
+      label: const Text('Copy latest'),
+    );
+  }
+}
+
+class _HistoryTab extends ConsumerWidget {
+  const _HistoryTab();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    ref.read(favoritesOnlyProvider.notifier).state = false;
+
+    return Column(
+      children: [
+        _FilterBar(),
+        const Divider(height: 0),
+        Expanded(
+          child: Consumer(
+            builder: (context, ref, _) {
+              final list = ref.watch(filteredClipsProvider);
+              return _ClipList(list: list);
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _FavoritesTab extends ConsumerWidget {
+  const _FavoritesTab();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    ref.read(favoritesOnlyProvider.notifier).state = true;
+
+    return Column(
+      children: [
+        _FilterBar(showFavoritesSwitch: false),
+        const Divider(height: 0),
+        Expanded(
+          child: Consumer(
+            builder: (context, ref, _) {
+              final list = ref.watch(filteredClipsProvider);
+              return _ClipList(list: list);
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ClipList extends StatelessWidget {
+  final List<dynamic> list;
+  const _ClipList({required this.list});
+
+  @override
+  Widget build(BuildContext context) {
+    if (list.isEmpty) {
+      return const Center(child: Text('No items yet. Copy something!'));
+    }
+    return ListView.separated(
+      itemCount: list.length,
+      separatorBuilder: (_, __) => const Divider(height: 0),
+      itemBuilder: (context, i) => ClipTile(item: list[i]),
+    );
+  }
+}
+
+class _FilterBar extends ConsumerWidget {
+  final bool showFavoritesSwitch;
+  const _FilterBar({this.showFavoritesSwitch = true});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final cat = ref.watch(categoryFilterProvider);
+    final favOnly = ref.watch(favoritesOnlyProvider);
+    final controller = TextEditingController(
+      text: ref.read(searchQueryProvider),
+    );
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: controller,
+                  decoration: InputDecoration(
+                    prefixIcon: const Icon(Icons.search),
+                    hintText: 'Search...',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    isDense: true,
+                  ),
+                  onChanged: (v) =>
+                      ref.read(searchQueryProvider.notifier).state = v,
+                ),
+              ),
+              const SizedBox(width: 8),
+              if (showFavoritesSwitch)
+                FilterChip(
+                  label: const Text('Favorites'),
+                  selected: favOnly,
+                  onSelected: (v) =>
+                      ref.read(favoritesOnlyProvider.notifier).state = v,
+                  avatar: const Icon(Icons.star, size: 18),
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _CatChip(
+                  label: 'All',
+                  selected: cat == null,
+                  onTap: () {
+                    ref.read(categoryFilterProvider.notifier).state = null;
+                  },
+                ),
+                _CatChip(
+                  label: 'Links',
+                  icon: Icons.link,
+                  selected: cat == ClipCategory.link,
+                  onTap: () {
+                    ref.read(categoryFilterProvider.notifier).state =
+                        ClipCategory.link;
+                  },
+                ),
+                _CatChip(
+                  label: 'Emails',
+                  icon: Icons.email,
+                  selected: cat == ClipCategory.email,
+                  onTap: () {
+                    ref.read(categoryFilterProvider.notifier).state =
+                        ClipCategory.email;
+                  },
+                ),
+                _CatChip(
+                  label: 'Phones',
+                  icon: Icons.call,
+                  selected: cat == ClipCategory.phone,
+                  onTap: () {
+                    ref.read(categoryFilterProvider.notifier).state =
+                        ClipCategory.phone;
+                  },
+                ),
+                _CatChip(
+                  label: 'Code',
+                  icon: Icons.code,
+                  selected: cat == ClipCategory.code,
+                  onTap: () {
+                    ref.read(categoryFilterProvider.notifier).state =
+                        ClipCategory.code;
+                  },
+                ),
+                _CatChip(
+                  label: 'Notes',
+                  icon: Icons.notes,
+                  selected: cat == ClipCategory.note,
+                  onTap: () {
+                    ref.read(categoryFilterProvider.notifier).state =
+                        ClipCategory.note;
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CatChip extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+  final IconData? icon;
+  const _CatChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+    this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 6),
+      child: ChoiceChip(
+        label: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null) Icon(icon, size: 16),
+            if (icon != null) const SizedBox(width: 4),
+            Text(label),
+          ],
+        ),
+        selected: selected,
+        onSelected: (_) => onTap(),
+      ),
+    );
+  }
+}
+
+class _SettingsTab extends ConsumerWidget {
+  const _SettingsTab();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final limitAsync = ref.watch(historyLimitProvider);
+
+    return ListView(
+      padding: const EdgeInsets.all(12),
+      children: [
+        const Text(
+          'Clipboard Listener',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        _ListenerTile(),
+        const SizedBox(height: 16),
+        const Text('History', style: TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        limitAsync.when(
+          data: (limit) => _HistoryLimitTile(current: limit),
+          loading: () => const ListTile(title: Text('Loading...')),
+          error: (_, __) => const ListTile(title: Text('Error')),
+        ),
+        const SizedBox(height: 16),
+        const Text(
+          'Danger Zone',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        _DangerZone(),
+      ],
+    );
+  }
+}
+
+class _ListenerTile extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settingsRepo = ref.read(settingsRepoProvider);
+    return FutureBuilder<bool>(
+      future: settingsRepo.isListenerEnabled(),
+      builder: (context, snapshot) {
+        final enabled = snapshot.data ?? true;
+        return SwitchListTile(
+          title: const Text('Background clipboard listener'),
+          subtitle: const Text('Automatically capture new copied text'),
+          value: enabled,
+          onChanged: (v) async {
+            await ref.read(listenerToggleProvider(v).future);
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(v ? 'Listener enabled' : 'Listener disabled'),
+                ),
+              );
+            }
+          },
+        );
+      },
+    );
+  }
+}
+
+class _HistoryLimitTile extends ConsumerStatefulWidget {
+  final int current;
+  const _HistoryLimitTile({required this.current});
+
+  @override
+  ConsumerState<_HistoryLimitTile> createState() => _HistoryLimitTileState();
+}
+
+class _HistoryLimitTileState extends ConsumerState<_HistoryLimitTile> {
+  late double _value;
+
+  @override
+  void initState() {
+    super.initState();
+    _value = widget.current.toDouble();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        ListTile(
+          title: const Text('History size (non-favorites)'),
+          subtitle: Text(_value.toInt().toString()),
+        ),
+        Slider(
+          min: 20,
+          max: 1000,
+          divisions: 49,
+          value: _value,
+          label: _value.toInt().toString(),
+          onChanged: (v) => setState(() => _value = v),
+          onChangeEnd: (v) async {
+            await ref.read(setHistoryLimitProvider(v.toInt()).future);
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('History limit set to ${v.toInt()}')),
+              );
+            }
+          },
+        ),
+      ],
+    );
+  }
+}
+
+class _DangerZone extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final clearNonFavs = ref.read(clearNonFavsCommandProvider);
+    final clearAll = ref.read(clearAllCommandProvider);
+    return Column(
+      children: [
+        FilledButton.tonalIcon(
+          onPressed: () async {
+            final ok = await _confirm(
+              context,
+              'Delete all non-favorite items?',
+            );
+            if (ok) {
+              await clearNonFavs();
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Cleared non-favorites')),
+                );
+              }
+            }
+          },
+          icon: const Icon(Icons.cleaning_services),
+          label: const Text('Clear non-favorites'),
+        ),
+        const SizedBox(height: 8),
+        FilledButton.icon(
+          style: FilledButton.styleFrom(
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+          onPressed: () async {
+            final ok = await _confirm(
+              context,
+              'Delete ALL items (including favorites)?',
+            );
+            if (ok) {
+              await clearAll();
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('All items cleared')),
+                );
+              }
+            }
+          },
+          icon: const Icon(Icons.delete_forever),
+          label: const Text('Clear ALL'),
+        ),
+      ],
+    );
+  }
+
+  Future<bool> _confirm(BuildContext context, String msg) async {
+    final res = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Confirm'),
+        content: Text(msg),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+    return res ?? false;
+  }
+}
