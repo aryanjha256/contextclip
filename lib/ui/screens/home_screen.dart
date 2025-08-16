@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 import '../../models/clip_item.dart';
 import '../../providers.dart';
@@ -155,6 +156,21 @@ class _FilterBar extends ConsumerWidget {
       text: ref.read(searchQueryProvider),
     );
 
+    Color categoryColor(ClipCategory c) {
+      switch (c) {
+        case ClipCategory.code:
+          return const Color(0xFF7E57C2);
+        case ClipCategory.link:
+          return const Color(0xFF42A5F5);
+        case ClipCategory.email:
+          return const Color(0xFFFF7043);
+        case ClipCategory.phone:
+          return const Color(0xFF66BB6A);
+        case ClipCategory.note:
+          return Colors.grey;
+      }
+    }
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
       child: Column(
@@ -194,6 +210,7 @@ class _FilterBar extends ConsumerWidget {
               children: [
                 _CatChip(
                   label: 'All',
+                  color: ColorScheme.of(context).inversePrimary,
                   selected: cat == null,
                   onTap: () {
                     ref.read(categoryFilterProvider.notifier).state = null;
@@ -201,7 +218,8 @@ class _FilterBar extends ConsumerWidget {
                 ),
                 _CatChip(
                   label: 'Links',
-                  icon: Icons.link,
+                  icon: HugeIcons.strokeRoundedLink04,
+                  color: categoryColor(ClipCategory.link),
                   selected: cat == ClipCategory.link,
                   onTap: () {
                     ref.read(categoryFilterProvider.notifier).state =
@@ -210,7 +228,8 @@ class _FilterBar extends ConsumerWidget {
                 ),
                 _CatChip(
                   label: 'Emails',
-                  icon: Icons.email,
+                  icon: HugeIcons.strokeRoundedMail02,
+                  color: categoryColor(ClipCategory.email),
                   selected: cat == ClipCategory.email,
                   onTap: () {
                     ref.read(categoryFilterProvider.notifier).state =
@@ -219,7 +238,8 @@ class _FilterBar extends ConsumerWidget {
                 ),
                 _CatChip(
                   label: 'Phones',
-                  icon: Icons.call,
+                  icon: HugeIcons.strokeRoundedCall02,
+                  color: categoryColor(ClipCategory.phone),
                   selected: cat == ClipCategory.phone,
                   onTap: () {
                     ref.read(categoryFilterProvider.notifier).state =
@@ -228,7 +248,8 @@ class _FilterBar extends ConsumerWidget {
                 ),
                 _CatChip(
                   label: 'Code',
-                  icon: Icons.code,
+                  icon: HugeIcons.strokeRoundedSourceCode,
+                  color: categoryColor(ClipCategory.code),
                   selected: cat == ClipCategory.code,
                   onTap: () {
                     ref.read(categoryFilterProvider.notifier).state =
@@ -237,7 +258,8 @@ class _FilterBar extends ConsumerWidget {
                 ),
                 _CatChip(
                   label: 'Notes',
-                  icon: Icons.notes,
+                  icon: HugeIcons.strokeRoundedTextIndent,
+                  color: categoryColor(ClipCategory.note),
                   selected: cat == ClipCategory.note,
                   onTap: () {
                     ref.read(categoryFilterProvider.notifier).state =
@@ -258,11 +280,13 @@ class _CatChip extends StatelessWidget {
   final bool selected;
   final VoidCallback onTap;
   final IconData? icon;
+  final Color color;
   const _CatChip({
     required this.label,
     required this.selected,
     required this.onTap,
     this.icon,
+    required this.color,
   });
 
   @override
@@ -270,12 +294,24 @@ class _CatChip extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(right: 6),
       child: ChoiceChip(
+        showCheckmark: false,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
+        shadowColor: color.withOpacity(0.4),
+        color: WidgetStateColor.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return color.withOpacity(0.2);
+          }
+          if (states.contains(WidgetState.hovered)) {
+            return color.withOpacity(0.1);
+          }
+          return Colors.transparent;
+        }),
         label: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (icon != null) Icon(icon, size: 16),
+            if (icon != null) Icon(icon, size: 16, color: color),
             if (icon != null) const SizedBox(width: 4),
-            Text(label),
+            Text(label, style: TextStyle(color: color)),
           ],
         ),
         selected: selected,
