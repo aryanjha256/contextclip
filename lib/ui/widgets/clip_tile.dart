@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 import '../../models/clip_item.dart';
 import '../../providers.dart';
@@ -11,15 +12,30 @@ class ClipTile extends ConsumerWidget {
   IconData _iconFor(ClipCategory c) {
     switch (c) {
       case ClipCategory.link:
-        return Icons.link;
+        return HugeIcons.strokeRoundedLink04;
       case ClipCategory.email:
-        return Icons.email;
+        return HugeIcons.strokeRoundedMail02;
       case ClipCategory.phone:
-        return Icons.call;
+        return HugeIcons.strokeRoundedCall02;
       case ClipCategory.code:
-        return Icons.code;
+        return HugeIcons.strokeRoundedSourceCode;
       case ClipCategory.note:
-        return Icons.notes;
+        return HugeIcons.strokeRoundedTextIndent;
+    }
+  }
+
+  Color _categoryColor(ClipCategory c) {
+    switch (c) {
+      case ClipCategory.code:
+        return const Color(0xFF7E57C2);
+      case ClipCategory.link:
+        return const Color(0xFF42A5F5);
+      case ClipCategory.email:
+        return const Color(0xFFFF7043);
+      case ClipCategory.phone:
+        return const Color(0xFF66BB6A);
+      case ClipCategory.note:
+        return Colors.grey;
     }
   }
 
@@ -30,23 +46,22 @@ class ClipTile extends ConsumerWidget {
     final del = ref.read(deleteClipCommandProvider);
 
     return ListTile(
-      leading: CircleAvatar(child: Icon(_iconFor(item.category))),
+      leading: Icon(
+        _iconFor(item.category),
+        color: _categoryColor(item.category),
+      ),
       title: Text(
         item.content,
         maxLines: 3,
         overflow: TextOverflow.ellipsis,
         style: const TextStyle(height: 1.25),
       ),
-      subtitle: Text(
-        item.category.name.toUpperCase(),
-        style: TextStyle(color: Theme.of(context).colorScheme.primary),
-      ),
       trailing: Wrap(
         spacing: 4,
         children: [
           IconButton(
             tooltip: 'Copy',
-            icon: const Icon(Icons.copy),
+            icon: const Icon(HugeIcons.strokeRoundedCopy01),
             onPressed: () async {
               await copy(item.content);
               if (context.mounted) {
@@ -58,12 +73,15 @@ class ClipTile extends ConsumerWidget {
           ),
           IconButton(
             tooltip: item.isFavorite ? 'Unfavorite' : 'Favorite',
-            icon: Icon(item.isFavorite ? Icons.star : Icons.star_border),
+            icon: Icon(
+              HugeIcons.strokeRoundedStar,
+              color: item.isFavorite ? Colors.amberAccent : Colors.black38,
+            ),
             onPressed: () => toggleFav(item.id),
           ),
           IconButton(
             tooltip: 'Delete',
-            icon: const Icon(Icons.delete_outline),
+            icon: const Icon(HugeIcons.strokeRoundedDelete02),
             onPressed: () => del(item.id),
           ),
         ],
