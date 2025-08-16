@@ -45,44 +45,105 @@ class ClipTile extends ConsumerWidget {
     final toggleFav = ref.read(toggleFavoriteCommandProvider);
     final del = ref.read(deleteClipCommandProvider);
 
-    return ListTile(
-      leading: Icon(
-        _iconFor(item.category),
-        color: _categoryColor(item.category),
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOut,
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: _categoryColor(item.category).withOpacity(0.05),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: _categoryColor(item.category).withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
-      title: Text(
-        item.content,
-        maxLines: 3,
-        overflow: TextOverflow.ellipsis,
-        style: const TextStyle(height: 1.25),
-      ),
-      trailing: Wrap(
-        spacing: 4,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          IconButton(
-            tooltip: 'Copy',
-            icon: const Icon(HugeIcons.strokeRoundedCopy01),
-            onPressed: () async {
-              await copy(item.content);
-              if (context.mounted) {
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(const SnackBar(content: Text('Copied')));
-              }
-            },
+          // Category badge
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                margin: EdgeInsets.only(left: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: _categoryColor(item.category).withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      _iconFor(item.category),
+                      color: _categoryColor(item.category),
+                      size: 16,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      item.category.name.toUpperCase(),
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: _categoryColor(item.category),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Wrap(
+                spacing: 4,
+                children: [
+                  IconButton(
+                    tooltip: 'Copy',
+                    icon: const Icon(HugeIcons.strokeRoundedCopy01, size: 20),
+                    onPressed: () async {
+                      await copy(item.content);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(
+                          context,
+                        ).showSnackBar(const SnackBar(content: Text('Copied')));
+                      }
+                    },
+                  ),
+                  IconButton(
+                    tooltip: item.isFavorite ? 'Unfavorite' : 'Favorite',
+                    icon: Icon(
+                      HugeIcons.strokeRoundedStar,
+                      color: item.isFavorite
+                          ? Colors.amberAccent
+                          : Colors.black38,
+                      size: 20,
+                    ),
+                    onPressed: () => toggleFav(item.id),
+                  ),
+                  IconButton(
+                    tooltip: 'Delete',
+                    icon: const Icon(HugeIcons.strokeRoundedDelete02, size: 20),
+                    onPressed: () => del(item.id),
+                  ),
+                ],
+              ),
+            ],
           ),
-          IconButton(
-            tooltip: item.isFavorite ? 'Unfavorite' : 'Favorite',
-            icon: Icon(
-              HugeIcons.strokeRoundedStar,
-              color: item.isFavorite ? Colors.amberAccent : Colors.black38,
+
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            child: Text(
+              item.content,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                height: 1.25,
+                fontFamily: item.category == ClipCategory.code
+                    ? "monospace"
+                    : null,
+                color: Colors.black87,
+              ),
             ),
-            onPressed: () => toggleFav(item.id),
-          ),
-          IconButton(
-            tooltip: 'Delete',
-            icon: const Icon(HugeIcons.strokeRoundedDelete02),
-            onPressed: () => del(item.id),
           ),
         ],
       ),
