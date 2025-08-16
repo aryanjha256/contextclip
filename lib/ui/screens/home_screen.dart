@@ -38,11 +38,65 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         centerTitle: true,
         title: const Text('ContextClip'),
         bottom: TabBar(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
           controller: _tab,
+          overlayColor: WidgetStateColor.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
+              return ColorScheme.fromSwatch().onSurface.withOpacity(0.1);
+            }
+            if (states.contains(WidgetState.hovered)) {
+              return ColorScheme.fromSwatch().onSurface.withOpacity(0.05);
+            }
+            return Colors.transparent;
+          }),
+          dividerColor: Colors.transparent,
+          indicatorColor: Colors.transparent,
+          indicatorAnimation: TabIndicatorAnimation.elastic,
+          indicator: BoxDecoration(
+            color: ColorScheme.fromSwatch().onSurface.withOpacity(0.1),
+            shape: BoxShape.rectangle,
+            borderRadius: BorderRadius.circular(32),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+
+          indicatorSize: TabBarIndicatorSize.tab,
           tabs: const [
-            Tab(icon: Icon(Icons.history), text: 'History'),
-            Tab(icon: Icon(Icons.star), text: 'Favorites'),
-            Tab(icon: Icon(Icons.settings), text: 'Settings'),
+            Tab(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(HugeIcons.strokeRoundedStopWatch, size: 20),
+                  SizedBox(width: 8),
+                  Text('History'),
+                ],
+              ),
+            ),
+            Tab(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(HugeIcons.strokeRoundedStar, size: 20),
+                  SizedBox(width: 8),
+                  Text('Favorites'),
+                ],
+              ),
+            ),
+            Tab(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(HugeIcons.strokeRoundedSetting07, size: 20),
+                  SizedBox(width: 8),
+                  Text('Settings'),
+                ],
+              ),
+            ),
           ],
         ),
       ),
