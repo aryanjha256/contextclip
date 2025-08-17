@@ -2,15 +2,22 @@
 
 Clipboard Intelligence
 
-## Getting Started
+## Commands
 
-This project is a starting point for a Flutter application.
+```bash
+# To create a project, below command is used for this project
+flutter create --org com.pxizo --project-name=contextclip --description "Clipboard Intelligence" --platforms=android contextclip
+```
 
-A few resources to get you started if this is your first Flutter project:
+```bash
+# To run the app
+flutter run
+```
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+```bash
+# Build and install the app
+flutter build apk --release
+flutter install apk --release
+```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### this readme is for the contextclip project, manually written
